@@ -40,6 +40,9 @@ let moves = 0;
 let matchedPairs = 0;
 let celebrationTimer = null;
 
+const NEXT_STAGE_DELAY = 9000; // ms after the win screen before moving on
+let nextStageTimer = null;
+
 // One Audio object per animal, created once
 const sounds = {};
 ANIMALS.forEach(a => {
