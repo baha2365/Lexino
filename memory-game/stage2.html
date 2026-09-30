@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What is it? – Stage 2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="stage2.css">
+</head>
+<body>
+  <main class="game">
+    <header class="game__header">
+      <h1>What is it?</h1>
+      <div class="game__controls">
+        <div class="dots" id="dots" aria-label="Progress"></div>
+        <button type="button" id="restart" class="btn">New game</button>
+      </div>
+    </header>
+
+    <p id="status" class="status" aria-live="polite">Press Start to begin.</p>
+
+    <section class="stage">
+      <div class="picture" id="picture">
+        <img id="animal-img" alt="">
+        <span id="animal-emoji" class="picture__emoji" hidden></span>
+        <p id="answer" class="picture__answer" aria-live="polite"></p>
+      </div>
+
+      <div class="mic-area">
+        <button type="button" id="mic" class="mic" aria-label="Microphone" disabled>
+          <svg viewBox="0 0 24 24" width="56" height="56" aria-hidden="true">
+            <path fill="currentColor" d="M12 15a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v5a4 4 0 0 0 4 4Zm6-4a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.91V19H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.09A6 6 0 0 0 18 11Z"/>
+          </svg>
+        </button>
+        <div class="wave" id="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </section>
+
+    <canvas id="fireworks" class="fireworks" aria-hidden="true"></canvas>
+
+    <div id="start" class="win">
+      <div class="win__box">
+        <h2>Ready?</h2>
+        <p>Look at the picture and say what it is.</p>
+        <button type="button" id="start-btn" class="btn btn--big">Start</button>
+      </div>
+    </div>
+
+    <div id="win" class="win" hidden>
+      <div class="win__box" role="dialog" aria-labelledby="win-title">
+        <h2 id="win-title">🎉 Well done! 🎉</h2>
+        <p>You named all the animals!</p>
+        <button type="button" id="play-again" class="btn btn--big">Play again</button>
+        <p class="win__link"><a href="index.html">← Back to the card game</a></p>
+      </div>
+    </div>
+  </main>
+
+  <script src="stage2.js"></script>
+</body>
+</html>
