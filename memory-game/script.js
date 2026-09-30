@@ -162,6 +162,7 @@ function handleMatch() {
       winEl.hidden = false;
       document.getElementById('play-again').focus();
       celebrate();
+      nextStageTimer = setTimeout(() => { location.href = 'stage2.html'; }, NEXT_STAGE_DELAY);
     }, 1200);
   } else {
     setStatus('A match! Find the next pair.');
@@ -340,6 +341,7 @@ function startGame() {
   applause.pause();
   applause.currentTime = 0;
   clearTimeout(celebrationTimer);
+  clearTimeout(nextStageTimer);
   stopFireworks();
 
   moves = 0;
