@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parent Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../memory-game/style.css">
+  <link rel="stylesheet" href="parent.css">
+</head>
+<body>
+  <main class="dash">
+    <header class="dash__header">
+      <div>
+        <h1>Parent Dashboard</h1>
+        <p class="sub" id="child-line"></p>
+      </div>
+      <a href="../memory-game/index.html" class="btn">Open games</a>
+    </header>
+
+
+    <section class="stats" id="stats" aria-label="Weekly summary"></section>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>Practice this week</h2>
+        <div class="chart" id="chart"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Sound clarity</h2>
+        <p class="hint">How clearly each sound was said in the games.</p>
+        <div id="sounds"></div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>What we noticed</h2>
+      <ul class="notes" id="notes"></ul>
+    </section>
+
+    <section class="panel">
+      <div class="panel__head">
+        <div>
+          <h2>Plan for next week</h2>
+          <p class="hint" id="plan-goal"></p>
+        </div>
+        <button type="button" class="btn btn--alt" id="regen">Make a new plan</button>
+      </div>
+      <div class="days" id="days"></div>
+      <div class="plan-foot">
+        <span id="plan-progress"></span>
+        <div class="bar"><i id="plan-bar"></i></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Tips for home</h2>
+      <ul class="notes" id="tips"></ul>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="parent.js"></script>
+</body>
+</html>
