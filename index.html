@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lip-sync character</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23E7F2EF'/%3E%3Cpath d='M5 15c4-5 8-5 11-3 3-2 7-2 11 3-3 7-8 10-11 10S8 22 5 15z' fill='%23D9566A'/%3E%3Cpath d='M5 15q11 5 22 0' fill='none' stroke='%238E2A3D' stroke-width='1.5'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <h1>Lip-sync character</h1>
+      <div class="source">
+        <label class="pick" id="pickList" hidden>
+          <span class="visually-hidden">Recording from the audio folder</span>
+          <select id="fileList"></select>
+        </label>
+        <label class="btn" for="fileInput">Choose audio</label>
+        <input id="fileInput" class="visually-hidden" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac,.flac,.webm">
+      </div>
+    </header>
+
+    <!-- The mirror: speech therapists sit children in front of one to watch the mouth -->
+    <section class="mirror" id="mirror" aria-label="Character">
+      <button class="zoom" id="zoomBtn" type="button" aria-pressed="false">Close-up</button>
+
+      <svg id="character" viewBox="50 76 500 533" role="img" aria-label="Cartoon woman whose mouth moves with the recording">
+        <defs>
+          <linearGradient id="gSkin" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FBD9B9"/><stop offset="1" stop-color="#F4C6A0"/>
+          </linearGradient>
+          <linearGradient id="gHair" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#C4553A"/><stop offset="1" stop-color="#A23A2A"/>
+          </linearGradient>
+          <linearGradient id="gSweater" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#EE6A5C"/><stop offset="1" stop-color="#DD4D45"/>
+          </linearGradient>
+          <linearGradient id="gLipU" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#C9485A"/><stop offset="1" stop-color="#B93A4E"/>
+          </linearGradient>
+          <linearGradient id="gLipL" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#D9566A"/><stop offset="1" stop-color="#C5445A"/>
+          </linearGradient>
+          <radialGradient id="gCavity" cx="0.5" cy="0.35" r="0.75">
+            <stop offset="0" stop-color="#7A1F2E"/><stop offset="1" stop-color="#4A0E1B"/>
+          </radialGradient>
+          <linearGradient id="gTongue" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F28C98"/><stop offset="1" stop-color="#E26E7F"/>
+          </linearGradient>
+          <clipPath id="eyeClipL"><ellipse cx="250" cy="303" rx="25" ry="21"/></clipPath>
+          <clipPath id="eyeClipR"><ellipse cx="350" cy="303" rx="25" ry="21"/></clipPath>
+          <clipPath id="mouthClip"><path id="mouthHole" d=""/></clipPath>
+          <clipPath id="biteClip"><path id="biteArea" d=""/></clipPath>
+        </defs>
+
+        <!-- hair behind the head, with the bun -->
+        <g class="hair-back">
+          <circle cx="446" cy="366" r="47" fill="#A23A2A"/>
+          <path d="M418 352c12-20 40-24 58-8" fill="none" stroke="#C4553A" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+          <ellipse cx="302" cy="268" rx="134" ry="152" fill="url(#gHair)"/>
+        </g>
+
+        <!-- neck and sweater -->
+        <path d="M266 420v84q34 26 68 0v-84z" fill="#EDB893"/>
+        <path d="M266 438q34 34 68 0v22q-34 30-68 0z" fill="#DFA27C" opacity=".75"/>
+        <path d="M92 680c4-92 56-146 156-170l18-10q34 26 68 0l18 10c100 24 152 78 156 170z" fill="url(#gSweater)"/>
+        <path d="M92 680c2-40 12-72 32-98 4 34 12 66 26 98zM508 680c-2-40-12-72-32-98-4 34-12 66-26 98z" fill="#C9433D" opacity=".45"/>
+        <path d="M266 494l34 50-64 26c-12-32 2-62 30-76z" fill="#FFFFFF"/>
+        <path d="M334 494l-34 50 64 26c12-32-2-62-30-76z" fill="#FFFFFF"/>
+        <path d="M266 494l34 50-8 3z M334 494l-34 50 8 3z" fill="#DCE3EA"/>
+
+        <!-- ears -->
+        <g fill="#F4C6A0">
+          <ellipse cx="191" cy="322" rx="15" ry="24"/><ellipse cx="409" cy="322" rx="15" ry="24"/>
+        </g>
+        <path d="M187 312q8 8 4 22M413 312q-8 8-4 22" fill="none" stroke="#E0A681" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="188" cy="349" r="5" fill="#F4B93E"/><circle cx="412" cy="349" r="5" fill="#F4B93E"/>
+
+        <!-- face (the chin drops with the jaw) -->
+        <path id="face" d="" fill="url(#gSkin)"/>
+        <ellipse cx="232" cy="362" rx="25" ry="14" fill="#F4907F" opacity=".32"/>
+        <ellipse cx="368" cy="362" rx="25" ry="14" fill="#F4907F" opacity=".32"/>
+
+        <!-- eyes -->
+        <g class="eye" id="eyeL">
+          <ellipse cx="250" cy="303" rx="25" ry="21" fill="#FFFFFF"/>
+          <g clip-path="url(#eyeClipL)">
+            <circle cx="251" cy="301" r="17" fill="#5E7A4C"/><circle cx="251" cy="301" r="15.5" fill="none" stroke="#3F5634" stroke-width="3"/>
+            <circle cx="251" cy="301" r="8.5" fill="#1F1A17"/>
+            <circle cx="245" cy="294.5" r="5" fill="#FFFFFF"/><circle cx="257.5" cy="307.5" r="2.2" fill="#FFFFFF" opacity=".8"/>
+          </g>
+          <path d="M223 300q27-33 54 0" fill="none" stroke="#3A1E1A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M223 299l-8-5" fill="none" stroke="#3A1E1A" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        <g class="eye" id="eyeR">
+          <ellipse cx="350" cy="303" rx="25" ry="21" fill="#FFFFFF"/>
+          <g clip-path="url(#eyeClipR)">
+            <circle cx="349" cy="301" r="17" fill="#5E7A4C"/><circle cx="349" cy="301" r="15.5" fill="none" stroke="#3F5634" stroke-width="3"/>
+            <circle cx="349" cy="301" r="8.5" fill="#1F1A17"/>
+            <circle cx="343" cy="294.5" r="5" fill="#FFFFFF"/><circle cx="355.5" cy="307.5" r="2.2" fill="#FFFFFF" opacity=".8"/>
+          </g>
+          <path d="M323 300q27-33 54 0" fill="none" stroke="#3A1E1A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M377 299l8-5" fill="none" stroke="#3A1E1A" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        <path d="M221 264q28-16 57-5M379 264q-28-16-57-5" fill="none" stroke="#8C3323" stroke-width="5.5" stroke-linecap="round"/>
+
+        <!-- nose -->
+        <path d="M291 349q9 9 19-1" fill="none" stroke="#DE9E79" stroke-width="3.6" stroke-linecap="round"/>
+
+        <!-- mouth: every path below is redrawn by js/character.js -->
+        <g id="mouth" transform="translate(300 396) scale(1.15)">
+          <path id="lipShadow" d="" fill="none" stroke="#D99A78" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+          <path id="mouthBack" d="" fill="#5A1422" stroke="#5A1422" stroke-width="1.8" stroke-linejoin="round"/>
+          <g clip-path="url(#mouthClip)">
+            <rect x="-60" y="-30" width="120" height="80" fill="url(#gCavity)"/>
+            <path id="tongue" d="" fill="url(#gTongue)"/>
+            <path id="tongueLine" d="" fill="none" stroke="#C9566A" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>
+            <path id="teethLower" d="" fill="#F4F6F9"/>
+            <path id="teethUpper" d="" fill="#FFFFFF"/>
+            <path id="teethLines" d="" fill="none" stroke="#D5DBE3" stroke-width="1"/>
+          </g>
+          <path id="lipLower" d="" fill="url(#gLipL)"/>
+          <path id="lipShine" d="" fill="none" stroke="#F3A3AE" stroke-width="2.6" stroke-linecap="round" opacity=".7"/>
+          <g id="bite" clip-path="url(#biteClip)" opacity="0">
+            <path id="teethBite" d="" fill="#FFFFFF"/>
+          </g>
+          <path id="lipUpper" d="" fill="url(#gLipU)"/>
+          <path id="lipSeam" d="" fill="none" stroke="#8E2A3D" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+
+        <!-- hair in front: side-swept fringe -->
+        <g class="hair-front">
+          <path d="M356 204c-38 14-116 12-154 104-20-4-30-30-32-58 2-98 78-146 150-146 82 0 124 78 112 158-2 18-8 34-22 40 0-40-14-74-54-98z" fill="url(#gHair)"/>
+          <path d="M346 150c-56 8-120 44-144 110" fill="none" stroke="#DB7654" stroke-width="7" stroke-linecap="round" opacity=".4"/>
+          <path d="M352 196c-44 14-96 22-130 62" fill="none" stroke="#8E2F22" stroke-width="4" stroke-linecap="round" opacity=".22"/>
+          <path d="M366 140c32 20 52 56 56 100" fill="none" stroke="#DB7654" stroke-width="6" stroke-linecap="round" opacity=".35"/>
+        </g>
+      </svg>
+    </section>
+
+    <section class="player" aria-label="Player">
+      <button class="play" id="playBtn" type="button" disabled aria-label="Play">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l11-6.5z"/><path class="i-pause" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+      </button>
+      <div class="track">
+        <div class="timeline" id="timeline" tabindex="0" role="slider" aria-label="Position in the recording" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+          <canvas id="wave"></canvas>
+          <div class="playhead" id="playhead"></div>
+          <p class="hint" id="hint">Drop a speech recording here, or choose a file.</p>
+        </div>
+        <div class="meta">
+          <span id="status">No recording loaded</span>
+          <span class="time" id="time">0:00.0 / 0:00.0</span>
+        </div>
+        <ul class="legend" id="legend" hidden></ul>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="Playback settings">
+      <div class="group" role="group" aria-label="Speed">
+        <span class="group-label">Speed</span>
+        <button type="button" class="chip" data-rate="0.5">0.5×</button>
+        <button type="button" class="chip" data-rate="0.75">0.75×</button>
+        <button type="button" class="chip is-on" data-rate="1">1×</button>
+      </div>
+      <div class="group" role="group" aria-label="Mouth timing">
+        <span class="group-label">Mouth timing</span>
+        <button type="button" class="chip step" id="syncEarlier" aria-label="Move the mouth earlier">−</button>
+        <output id="syncValue" class="sync-value">0 ms</output>
+        <button type="button" class="chip step" id="syncLater" aria-label="Move the mouth later">+</button>
+      </div>
+    </section>
+
+    <section class="shapes" aria-label="Mouth shapes">
+      <span class="group-label">Hold a sound to see its mouth shape</span>
+      <div class="shape-row" id="shapeRow"></div>
+    </section>
+
+  </main>
+
+  <script src="js/lipsync-engine.js"></script>
+  <script src="js/character.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
