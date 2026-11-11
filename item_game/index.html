@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Odd One Out</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Rubik:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  /* Layout idea: top bar with 10 level dots, four sticker cards in one row (2x2 on phones),
+     one big coral bucket at the bottom of a hill. The bucket is the only saturated shape. */
+  :root {
+    --ink: #26264f;
+    --sky: #c4e9ff;
+    --sun: #ffc83d;
+    --coral: #ff6b57;
+    --leaf: #3fb67c;
+    --paper: #fffaf0;
+    --font-display: 'Rubik', 'Nunito', system-ui, sans-serif;
+    --font-body: 'Nunito', system-ui, sans-serif;
+    --card: clamp(84px, min(20vw, 25vh), 210px);
+    --bucket: clamp(110px, min(34vw, 27vh), 270px);
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--sky);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 700;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  [hidden] { display: none !important; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
+
+  #app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(circle 64px at 90% 17%, #ffe27a 0 97%, transparent 100%),
+      radial-gradient(ellipse 75% 20% at 18% 102%, #92d899 0 98%, transparent 100%),
+      radial-gradient(ellipse 85% 24% at 88% 106%, #69c47f 0 98%, transparent 100%),
+      linear-gradient(#bfe6ff, #ecf8ff);
+  }
+
+  /* ---------- top bar ---------- */
+  .bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px max(16px, env(safe-area-inset-left)) 6px;
+    flex-wrap: wrap;
+  }
+  .tools { display: flex; gap: 8px; }
+  .brand { font-family: var(--font-display); font-weight: 800; font-size: 20px; min-width: 96px; }
+  .chip {
+    border: 3px solid var(--ink); background: var(--paper); border-radius: 999px;
+    padding: 6px 14px; min-height: 44px; min-width: 44px;
+    font-family: var(--font-display); font-weight: 800; font-size: 15px;
+    box-shadow: 0 4px 0 var(--ink);
+  }
+  .chip[aria-pressed="true"] { background: var(--sun); }
+  .chip:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  .chip.slow { font-size: 22px; padding: 2px 12px; }
+
+  .dots { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; justify-content: center; }
+  .dot {
+    width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--ink);
+    background: rgba(255,250,240,.6); font-family: var(--font-display); font-weight: 800; font-size: 15px;
+    display: grid; place-items: center; padding: 0;
+  }
+  .dot.done { background: var(--sun); }
+  .dot.now { background: var(--paper); box-shadow: 0 0 0 4px var(--coral); }
+
+
+  /* ---------- stage ---------- */
+  .stage {
+    flex: 1; min-height: 0; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
+    padding: 4px 16px 12px;
+  }
+  .prompt {
+    display: inline-flex; align-items: center; gap: 10px; max-width: 100%;
+    border: 3px solid var(--ink); background: var(--paper); border-radius: 999px;
+    padding: 8px 18px 8px 10px; box-shadow: 0 4px 0 var(--ink);
+    font-family: var(--font-display); font-weight: 600; font-size: clamp(14px, 2.4vw, 20px);
+    text-align: left; text-wrap: balance;
+  }
+  .prompt:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  .prompt .spk { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--sun); display: grid; place-items: center; border: 3px solid var(--ink); }
+
+  .grid {
+    position: relative; z-index: 5;
+    display: grid; grid-template-columns: repeat(4, var(--card));
+    gap: 30px clamp(14px, 3vw, 36px); justify-content: center;
+  }
+  .item {
+    position: relative; width: var(--card); height: var(--card); padding: 0;
+    border: 4px solid var(--ink); border-radius: 30px; background: var(--paper);
+    box-shadow: 0 7px 0 var(--ink);
+    display: grid; place-items: center;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    cursor: grab;
+  }
+  .item:nth-child(4n+2) { background: #fff0c9; }
+  .item:nth-child(4n+3) { background: #e3f4ff; }
+  .item:nth-child(4n+4) { background: #ffe5e0; }
+  .emo { font-size: calc(var(--card) * .56); line-height: 1; pointer-events: none; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+  .cap {
+    position: absolute; left: 50%; bottom: -20px; transform: translateX(-50%);
+    background: var(--ink); color: var(--paper); border-radius: 999px; padding: 2px 14px;
+    font-family: var(--font-display); font-weight: 600; font-size: clamp(15px, 2.6vw, 22px);
+    white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s;
+  }
+  .item.named .cap { opacity: 1; }
+  .item.held { cursor: grabbing; }
+  .item.dragging { transition: none; z-index: 50; box-shadow: 0 16px 0 rgba(38,38,79,.28); }
+  .item.back { transition: transform .4s cubic-bezier(.34,1.56,.64,1), box-shadow .4s; z-index: 50; }
+  .item.drop { transition: transform .5s cubic-bezier(.5,0,.8,.4), opacity .5s ease-in; opacity: 0; z-index: 50; pointer-events: none; }
+  .item.wiggle { animation: wiggle .5s ease; }
+  .item.hint { animation: hint 1s ease-in-out infinite; }
+  @keyframes wiggle { 0%,100% { transform: rotate(0) } 20% { transform: rotate(-7deg) scale(1.05) } 50% { transform: rotate(6deg) scale(1.05) } 80% { transform: rotate(-3deg) } }
+  @keyframes hint { 0%,100% { box-shadow: 0 7px 0 var(--ink), 0 0 0 0 rgba(255,107,87,.0) } 50% { box-shadow: 0 7px 0 var(--ink), 0 0 0 12px rgba(255,107,87,.55) } }
+
+  .bucketzone { position: relative; z-index: 1; }
+  .bucket { width: var(--bucket); height: calc(var(--bucket) * .92); transition: transform .2s; }
+  .bucket svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .bucket.hot { transform: scale(1.09); }
+  .bucket.hot .mouth { fill: #4b3b86; }
+  .bucket.bump { animation: bump .5s ease; }
+  .bucket.no { animation: no .45s ease; }
+  @keyframes bump { 0% { transform: scale(1) } 30% { transform: scale(1.14, .88) } 60% { transform: scale(.94, 1.08) } 100% { transform: scale(1) } }
+  @keyframes no { 0%,100% { transform: rotate(0) } 25% { transform: rotate(-5deg) } 75% { transform: rotate(5deg) } }
+
+  /* ---------- overlays ---------- */
+  .overlay {
+    position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px;
+    background: rgba(38,38,79,.38);
+  }
+  .panel {
+    background: var(--paper); border: 4px solid var(--ink); border-radius: 36px; box-shadow: 0 10px 0 var(--ink);
+    padding: clamp(18px, 4vw, 32px); display: grid; gap: 14px; justify-items: center; text-align: center;
+    max-width: min(92vw, 460px);
+    animation: pop .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes pop { from { transform: scale(.7); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+  .panel .big { font-size: clamp(72px, 16vh, 130px); line-height: 1.05; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+  .panel .word { font-family: var(--font-display); font-weight: 800; font-size: clamp(34px, 8vw, 56px); line-height: 1.1; }
+  .panel .row { display: flex; gap: 16px; align-items: center; }
+  .round {
+    width: 68px; height: 68px; border-radius: 50%; border: 4px solid var(--ink); background: var(--sun);
+    box-shadow: 0 6px 0 var(--ink); display: grid; place-items: center; padding: 0;
+  }
+  .round.go { width: 92px; height: 92px; background: var(--leaf); animation: nudge 1.2s ease-in-out infinite; }
+  .round:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+  @keyframes nudge { 0%,100% { transform: translateX(0) } 50% { transform: translateX(6px) } }
+  .stars { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; font-size: clamp(26px, 6vw, 40px); color: var(--sun); text-shadow: 0 3px 0 var(--ink); }
+  .pill {
+    border: 4px solid var(--ink); background: var(--coral); color: var(--paper); border-radius: 999px;
+    padding: 10px 28px; font-family: var(--font-display); font-weight: 800; font-size: 24px; box-shadow: 0 6px 0 var(--ink);
+  }
+  .pill:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+
+  .start {
+    position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 20px;
+    background:
+      radial-gradient(circle 64px at 88% 14%, #ffe27a 0 97%, transparent 100%),
+      radial-gradient(ellipse 75% 20% at 18% 102%, #92d899 0 98%, transparent 100%),
+      radial-gradient(ellipse 85% 24% at 88% 106%, #69c47f 0 98%, transparent 100%),
+      linear-gradient(#bfe6ff, #ecf8ff);
+  }
+  .start-in { display: grid; gap: 22px; justify-items: center; text-align: center; }
+  .start h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(38px, 9vw, 76px); line-height: 1.05; text-wrap: balance; }
+  .demo { display: flex; gap: 12px; align-items: flex-end; }
+  .demo span { width: clamp(56px, 13vw, 92px); aspect-ratio: 1; display: grid; place-items: center; border: 4px solid var(--ink); border-radius: 24px; background: var(--paper); box-shadow: 0 6px 0 var(--ink); font-size: clamp(30px, 7vw, 50px); font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+  .demo span:last-child { background: #ffe5e0; transform: translateY(-14px) rotate(8deg); }
+  .playbtn {
+    width: clamp(96px, 20vw, 132px); aspect-ratio: 1; border-radius: 50%; border: 5px solid var(--ink); background: var(--leaf);
+    box-shadow: 0 9px 0 var(--ink); display: grid; place-items: center; padding: 0;
+  }
+  .playbtn:active { transform: translateY(6px); box-shadow: 0 3px 0 var(--ink); }
+  .playlabel { font-family: var(--font-display); font-weight: 800; font-size: 22px; margin-top: -6px; }
+
+  .conf { position: fixed; pointer-events: none; font-size: 28px; z-index: 60; line-height: 1; }
+
+  @media (max-width: 640px), (max-aspect-ratio: 1/1) {
+    :root { --card: clamp(92px, min(38vw, 21vh), 200px); --bucket: clamp(120px, min(46vw, 24vh), 250px); }
+    .grid { grid-template-columns: repeat(2, var(--card)); gap: 28px 20px; }
+  }
+  @media (max-width: 640px) {
+    .bar { gap: 8px 10px; padding-top: 8px; }
+    .dots { order: 3; width: 100%; flex-wrap: nowrap; gap: 4px; }
+    .dot { width: 29px; height: 29px; font-size: 13px; border-width: 2.5px; }
+    .dot.now { box-shadow: 0 0 0 3px var(--coral); }
+    .chip { min-height: 40px; padding: 4px 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+    .item.back, .item.drop { transition-duration: .01s !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <div class="brand">Odd one out</div>
+    <ol class="dots" id="dots" aria-label="Levels"></ol>
+    <div class="tools">
+      <button class="chip slow" id="slow" aria-pressed="false" aria-label="Slow audio" title="Slow audio">🐢</button>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <button class="prompt" id="prompt" type="button">
+      <span class="spk" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#26264f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#26264f"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      </span>
+      <span id="promptText">Find the odd one and drop it in the bucket!</span>
+    </button>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="bucketzone">
+      <div class="bucket" id="bucket" aria-label="Bucket" role="img">
+        <svg viewBox="0 0 240 220" aria-hidden="true">
+          <ellipse cx="120" cy="208" rx="88" ry="10" fill="rgba(38,38,79,.18)"/>
+          <path d="M50 70 C 44 -14, 196 -14, 190 70" fill="none" stroke="#26264f" stroke-width="9" stroke-linecap="round"/>
+          <path d="M28 62 L212 62 L190 196 Q188 207 176 207 L64 207 Q52 207 50 196 Z" fill="#ff6b57" stroke="#26264f" stroke-width="7" stroke-linejoin="round"/>
+          <path d="M34.2 100 L205.8 100 L200.2 134 L39.8 134 Z" fill="#ffc83d"/>
+          <path d="M54 152 L60 188" stroke="#fffaf0" stroke-opacity=".55" stroke-width="9" stroke-linecap="round"/>
+          <ellipse class="mouth" cx="120" cy="62" rx="92" ry="21" fill="#2a2150" stroke="#26264f" stroke-width="7"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="overlay" id="win" hidden>
+      <div class="panel">
+        <div class="big" id="winEmo"></div>
+        <div class="word" id="winWord"></div>
+        <div class="row">
+          <button class="round" id="winHear" type="button" aria-label="Listen">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#26264f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#26264f"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+          </button>
+          <button class="round go" id="winNext" type="button" aria-label="Next">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fffaf0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="final" hidden>
+      <div class="panel">
+        <div class="stars" id="finalStars" aria-hidden="true"></div>
+        <div class="word" id="finalText">You found them all!</div>
+        <button class="pill" id="again" type="button">Play again</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="start" id="start">
+    <div class="start-in">
+      <div class="demo" aria-hidden="true"><span>🍎</span><span>🍌</span><span>🍊</span><span>🚗</span></div>
+      <h1 id="startTitle">Find the odd one!</h1>
+      <button class="playbtn" id="play" type="button" aria-label="Play">
+        <svg width="58" height="58" viewBox="0 0 24 24" fill="#fffaf0" stroke="#fffaf0" stroke-width="2" stroke-linejoin="round"><path d="M8 5l12 7-12 7z"/></svg>
+      </button>
+      <div class="playlabel" id="playLabel">Play</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* =====================================================================
+     CONTENT. Edit here.
+     For every item, set `audio` to the path of your recording, relative to
+     this HTML file, for example 'audio/apple.mp3'. A blank path plays nothing
+     (the word still appears under the card and a warning goes to the console).
+     ===================================================================== */
+  const ITEMS = {
+    apple:    { e: '🍎', word: 'apple',      audio: 'audios/apple.wav' },
+    banana:   { e: '🍌', word: 'banana',     audio: 'audios/banana.wav' },
+    orange:   { e: '🍊', word: 'orange',     audio: 'audios/orange.wav' },
+    car:      { e: '🚗', word: 'car',        audio: 'audios/car.mp3' },
+    cat:      { e: '🐱', word: 'cat',        audio: 'audios/cat.mp3' },
+    dog:      { e: '🐶', word: 'dog',        audio: 'audios/dog.mp3' },
+    cow:      { e: '🐮', word: 'cow',        audio: 'audios/cow.mp3' },
+    bread:    { e: '🍞', word: 'bread',      audio: 'audios/bread.mp3' },
+    bus:      { e: '🚌', word: 'bus',        audio: 'audios/bus.mp3' },
+    plane:    { e: '✈️', word: 'airplane',   audio: 'audios/airplane.mp3' },
+    tree:     { e: '🌳', word: 'tree',       audio: 'audios/tree.mp3' },
+    carrot:   { e: '🥕', word: 'carrot',     audio: 'audios/carrot.mp3' },
+    tomato:   { e: '🍅', word: 'tomato',     audio: 'audios/tomato.mp3' },
+    cucumber: { e: '🥒', word: 'cucumber',   audio: 'audios/cucumber.mp3' },
+    bear:     { e: '🐻', word: 'bear',       audio: 'audios/bear.mp3' },
+    shirt:    { e: '👕', word: 't-shirt',    audio: 'audios/shirt.mp3' },
+    pants:    { e: '👖', word: 'pants',      audio: 'audios/pants.mp3' },
+    socks:    { e: '🧦', word: 'socks',      audio: 'audios/socks.mp3' },
+    melon:    { e: '🍉', word: 'watermelon', audio: 'audios/watermelon.mp3' },
+    elephant: { e: '🐘', word: 'elephant',   audio: 'audios/elephant.mp3' },
+    lion:     { e: '🦁', word: 'lion',       audio: 'audios/lion.mp3' },
+    monkey:   { e: '🐒', word: 'monkey',     audio: 'audios/monkey.mp3' },
+    rocket:   { e: '🚀', word: 'rocket',     audio: 'audios/rocket.mp3' },
+    ball:     { e: '⚽', word: 'ball',       audio: 'audios/ball.mp3' },
+    balloon:  { e: '🎈', word: 'balloon',    audio: 'audios/balloon.mp3' },
+    drum:     { e: '🥁', word: 'drum',       audio: 'audios/drum.mp3' },
+    frog:     { e: '🐸', word: 'frog',       audio: 'audios/frog.mp3' },
+    egg:      { e: '🥚', word: 'egg',        audio: 'audios/egg.mp3' },
+    cheese:   { e: '🧀', word: 'cheese',     audio: 'audios/cheese.mp3' },
+    bike:     { e: '🚲', word: 'bicycle',    audio: 'audios/bicycle.mp3' },
+    sun:      { e: '🌞', word: 'sun',        audio: 'audios/sun.mp3' },
+    star:     { e: '⭐', word: 'star',       audio: 'audios/star.mp3' },
+    moon:     { e: '🌙', word: 'moon',       audio: 'audios/moon.mp3' },
+    pear:     { e: '🍐', word: 'pear',       audio: 'audios/pear.mp3' },
+    chair:    { e: '🪑', word: 'chair',      audio: 'audios/chair.mp3' },
+    bed:      { e: '🛏️', word: 'bed',        audio: 'audios/bed.mp3' },
+    door:     { e: '🚪', word: 'door',       audio: 'audios/door.mp3' },
+    rabbit:   { e: '🐰', word: 'rabbit',     audio: 'audios/rabbit.mp3' }
+  };
+
+  /* Optional recordings for the other spoken parts. Leave blank to stay silent. */
+  const SOUNDS = {
+    instruction: '',        // "Find the odd one and drop it in the bucket"
+    praise: [],             // e.g. ['audio/great-job.mp3', 'audio/well-done.mp3'], one is picked at random
+    finished: ''            // played on the last screen
+  };
+
+  // Three items from one group plus one extra item that does not belong.
+  const LEVELS = [
+    { group: ['apple', 'banana', 'orange'],     extra: 'car'    },  // 1  fruits
+    { group: ['cat', 'dog', 'cow'],             extra: 'bread'  },  // 2  animals
+    { group: ['car', 'bus', 'plane'],           extra: 'tree'   },  // 3  transport
+    { group: ['carrot', 'tomato', 'cucumber'],  extra: 'bear'   },  // 4  vegetables
+    { group: ['shirt', 'pants', 'socks'],       extra: 'melon'  },  // 5  clothes
+    { group: ['elephant', 'lion', 'monkey'],    extra: 'rocket' },  // 6  wild animals
+    { group: ['ball', 'balloon', 'drum'],       extra: 'frog'   },  // 7  toys
+    { group: ['egg', 'cheese', 'bread'],        extra: 'bike'   },  // 8  food
+    { group: ['sun', 'star', 'moon'],           extra: 'pear'   },  // 9  sky
+    { group: ['chair', 'bed', 'door'],          extra: 'rabbit' }   // 10 home
+  ];
+
+  /* ===================================================================== */
+
+  const $ = s => document.querySelector(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const grid = $('#grid'), bucket = $('#bucket'), win = $('#win'), fin = $('#final');
+
+  const state = { slow: false, level: 0, wrong: 0, locked: false, started: false, done: new Set() };
+  let drag = null;
+
+  /* ---------- audio files ---------- */
+  const cache = new Map();
+  const warned = new Set();
+  let current = null;
+  function warnOnce(msg) { if (!warned.has(msg)) { warned.add(msg); console.warn('[Odd one out] ' + msg); } }
+  function getAudio(path) {
+    if (!path) return null;
+    let a = cache.get(path);
+    if (!a) { a = new Audio(); a.preload = 'auto'; a.src = path; cache.set(path, a); }
+    return a;
+  }
+  function stopAudio() {
+    if (current) { const c = current; current = null; c.a.pause(); c.finish(); }
+  }
+  /* Plays one file and resolves when it ends (or fails, or is stopped).
+     label: used in console warnings. optional: stay silent when the path is blank. */
+  function play(path, label, optional) {
+    stopAudio();
+    if (!path) {
+      if (!optional) warnOnce(`No audio path set for "${label}". Add one in ITEMS.`);
+      return Promise.resolve();
+    }
+    const a = getAudio(path);
+    return new Promise(resolve => {
+      let over = false;
+      const finish = () => {
+        if (over) return; over = true;
+        a.removeEventListener('ended', finish); a.removeEventListener('error', onError);
+        if (current && current.a === a) current = null;
+        resolve();
+      };
+      const onError = () => { warnOnce(`Could not load audio file "${path}" for "${label}".`); finish(); };
+      a.addEventListener('ended', finish); a.addEventListener('error', onError);
+      current = { a, finish };
+      try { a.currentTime = 0; } catch (_) {}
+      a.playbackRate = state.slow ? 0.75 : 1;
+      const r = a.play();
+      if (r && r.catch) r.catch(() => { warnOnce(`Could not play "${path}" for "${label}".`); finish(); });
+    });
+  }
+  const sayItem = id => play(ITEMS[id].audio, ITEMS[id].word);
+  const sayInstruction = () => play(SOUNDS.instruction, 'instruction', true);
+  function sayPraise() {
+    const list = SOUNDS.praise;
+    return play(list.length ? list[Math.floor(Math.random() * list.length)] : '', 'praise', true);
+  }
+  function preload(ids) { ids.forEach(id => getAudio(ITEMS[id].audio)); }
+
+  /* ---------- sound effects (short synthesized beeps, no files needed) ---------- */
+  let ac = null;
+  function tone(freq, start, dur, type, vol) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, ac.currentTime + start);
+    g.gain.exponentialRampToValueAtTime(vol, ac.currentTime + start + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + start + dur);
+    o.connect(g).connect(ac.destination);
+    o.start(ac.currentTime + start); o.stop(ac.currentTime + start + dur + 0.05);
+  }
+  function sfx(name) {
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
+      if (name === 'no') { tone(330, 0, 0.16, 'triangle', 0.12); tone(262, 0.14, 0.22, 'triangle', 0.12); }
+      if (name === 'yay') { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.09, 0.28, 'sine', 0.16)); }
+      if (name === 'win') { [523, 659, 784, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * 0.11, 0.3, 'sine', 0.16)); }
+    } catch (_) {}
+  }
+
+  /* ---------- levels ---------- */
+  function renderDots() {
+    const ol = $('#dots'); ol.innerHTML = '';
+    LEVELS.forEach((_, i) => {
+      const li = document.createElement('li'), b = document.createElement('button');
+      b.type = 'button'; b.className = 'dot' + (state.done.has(i) ? ' done' : '') + (i === state.level ? ' now' : '');
+      b.textContent = i + 1; b.dataset.level = i; b.setAttribute('aria-label', 'Level ' + (i + 1));
+      li.appendChild(b); ol.appendChild(li);
+    });
+  }
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function loadLevel(i, speak = true) {
+    stopAudio();
+    state.level = i; state.wrong = 0; state.locked = false; drag = null;
+    win.hidden = true; fin.hidden = true;
+    const L = LEVELS[i];
+    const ids = shuffle([...L.group, L.extra]);
+    grid.innerHTML = '';
+    ids.forEach(id => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'item'; b.dataset.id = id;
+      b.setAttribute('aria-label', ITEMS[id].word);
+      b.innerHTML = `<span class="emo" aria-hidden="true">${ITEMS[id].e}</span><span class="cap"></span>`;
+      grid.appendChild(b);
+    });
+    preload(ids);
+    renderDots();
+    if (speak && state.started) setTimeout(() => { if (!state.locked && state.level === i) sayInstruction(); }, 350);
+  }
+  function showCap(card) { card.classList.add('named'); card.querySelector('.cap').textContent = ITEMS[card.dataset.id].word; }
+
+  /* ---------- drag and drop ---------- */
+  function overBucket(card) {
+    const c = card.getBoundingClientRect(), b = bucket.getBoundingClientRect(), pad = 18;
+    const cx = c.left + c.width / 2, cy = c.top + c.height / 2;
+    return cx > b.left - pad && cx < b.right + pad && cy > b.top - pad && cy < b.bottom + pad;
+  }
+  grid.addEventListener('pointerdown', e => {
+    const card = e.target.closest('.item');
+    if (!card || !state.started || state.locked || drag) return;
+    e.preventDefault();
+    try { card.setPointerCapture(e.pointerId); } catch (_) {}
+    drag = { card, id: e.pointerId, sx: e.clientX, sy: e.clientY, dx: 0, dy: 0, moved: false };
+    card.classList.add('held');
+    showCap(card);
+    sayItem(card.dataset.id);
+  });
+  grid.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag.dx = e.clientX - drag.sx; drag.dy = e.clientY - drag.sy;
+    if (!drag.moved && Math.hypot(drag.dx, drag.dy) > 10) { drag.moved = true; drag.card.classList.add('dragging'); }
+    if (drag.moved) {
+      drag.card.style.transform = `translate(${drag.dx}px, ${drag.dy}px) scale(1.12) rotate(-4deg)`;
+      bucket.classList.toggle('hot', overBucket(drag.card));
+    }
+  });
+  function endDrag(e, cancelled) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null;
+    bucket.classList.remove('hot'); d.card.classList.remove('held');
+    if (!d.moved) {
+      d.card.classList.add('wiggle'); setTimeout(() => d.card.classList.remove('wiggle'), 520);
+      return;
+    }
+    if (!cancelled && overBucket(d.card)) {
+      if (d.card.dataset.id === LEVELS[state.level].extra) success(d); else wrong(d);
+    } else springBack(d.card);
+  }
+  grid.addEventListener('pointerup', e => endDrag(e, false));
+  grid.addEventListener('pointercancel', e => endDrag(e, true));
+  grid.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('item') && state.started && !state.locked) {
+      e.preventDefault(); showCap(e.target); sayItem(e.target.dataset.id);
+    }
+  });
+
+  function springBack(card) {
+    card.classList.remove('dragging'); card.classList.add('back');
+    card.style.transform = '';
+    setTimeout(() => card.classList.remove('back'), 420);
+  }
+  function wrong(d) {
+    sfx('no');
+    bucket.classList.add('no'); setTimeout(() => bucket.classList.remove('no'), 460);
+    springBack(d.card);
+    state.wrong++;
+    if (state.wrong >= 2) {
+      const right = grid.querySelector(`[data-id="${LEVELS[state.level].extra}"]`);
+      if (right) right.classList.add('hint');
+    }
+  }
+  function success(d) {
+    state.locked = true;
+    const card = d.card, id = card.dataset.id;
+    const cr = card.getBoundingClientRect(), br = bucket.getBoundingClientRect();
+    const baseX = cr.left + cr.width / 2 - d.dx, baseY = cr.top + cr.height / 2 - d.dy;
+    const tx = br.left + br.width / 2 - baseX, ty = br.top + br.height * 0.3 - baseY;
+    grid.querySelectorAll('.hint').forEach(c => c.classList.remove('hint'));
+    card.classList.remove('dragging'); card.classList.add('drop');
+    card.style.transform = `translate(${tx}px, ${ty}px) scale(.3) rotate(14deg)`;
+    state.done.add(state.level); renderDots();
+    setTimeout(() => {
+      bucket.classList.add('bump'); setTimeout(() => bucket.classList.remove('bump'), 520);
+      sfx('yay'); burst();
+    }, 430);
+    setTimeout(() => {
+      $('#winEmo').textContent = ITEMS[id].e;
+      $('#winWord').textContent = ITEMS[id].word;
+      win.hidden = false;
+      sayItem(id).then(() => { if (!win.hidden) return sayPraise(); });
+    }, 900);
+  }
+  function burst() {
+    if (reduce) return;
+    const r = bucket.getBoundingClientRect(), colors = ['#ffc83d', '#ff6b57', '#3fb67c', '#26264f', '#4aa8ff'];
+    for (let i = 0; i < 18; i++) {
+      const s = document.createElement('span');
+      s.className = 'conf'; s.textContent = '★';
+      s.style.left = (r.left + r.width / 2) + 'px'; s.style.top = (r.top + r.height * 0.3) + 'px';
+      s.style.color = colors[i % colors.length];
+      document.body.appendChild(s);
+      const a = Math.random() * Math.PI * 2, dist = 90 + Math.random() * 140;
+      s.animate([
+        { transform: 'translate(-50%,-50%) scale(.4)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist - 70}px)) scale(1.3) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+      ], { duration: 900 + Math.random() * 400, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => s.remove();
+    }
+  }
+
+  /* ---------- flow ---------- */
+  function showFinal() {
+    stopAudio();
+    win.hidden = true;
+    $('#finalStars').innerHTML = '★'.repeat(LEVELS.length);
+    fin.hidden = false; sfx('win'); burst();
+    setTimeout(() => play(SOUNDS.finished, 'finished', true), 900);
+  }
+  $('#winNext').addEventListener('click', () => {
+    if (state.level < LEVELS.length - 1) loadLevel(state.level + 1); else showFinal();
+  });
+  $('#winHear').addEventListener('click', () => sayItem(LEVELS[state.level].extra));
+  $('#again').addEventListener('click', () => { state.done.clear(); loadLevel(0); });
+  $('#prompt').addEventListener('click', () => sayInstruction());
+  $('#play').addEventListener('click', () => {
+    state.started = true; $('#start').hidden = true;
+    sfx('pop'); loadLevel(state.level);
+  });
+  $('#slow').addEventListener('click', e => {
+    state.slow = !state.slow;
+    e.currentTarget.setAttribute('aria-pressed', String(state.slow));
+    e.currentTarget.style.background = state.slow ? 'var(--sun)' : '';
+    if (current) current.a.playbackRate = state.slow ? 0.75 : 1;
+  });
+  $('#dots').addEventListener('click', e => {
+    const d = e.target.closest('.dot'); if (d && state.started) loadLevel(+d.dataset.level);
+  });
+
+  /* ---------- boot ---------- */
+  function start(saved) {
+    if (saved && Number.isInteger(saved.level) && saved.level >= 0 && saved.level < LEVELS.length) state.level = saved.level;
+    if (saved && Array.isArray(saved.done)) state.done = new Set(saved.done);
+    if (saved && saved.slow) { state.slow = true; $('#slow').setAttribute('aria-pressed', 'true'); $('#slow').style.background = 'var(--sun)'; }
+    loadLevel(state.level, false);
+  }
+  window.claude?.hot?.snapshot?.(() => ({ level: state.level, slow: state.slow, done: [...state.done] }));
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>
